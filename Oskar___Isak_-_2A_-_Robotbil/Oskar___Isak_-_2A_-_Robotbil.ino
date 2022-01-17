@@ -1,0 +1,152 @@
+// Denna kod har för syfte att läsa in ir-koder från en fjärrkontroll, och tolka dessa för att översätta dem till en teckenkombination. 
+// Beroende på vilken knapp som tryckt in (vilken kod som har sickats) skall detta genom en if-sats styra och manövrera bilen.
+// Bilen Styrs med hjälp av dess fyra moterer som kan styras framår bakår och i olika hastigheter, därmed kan man svänga och köra bilen tillfredställande.
+// exempelvis om pil fram tyrcks in på tv-fjärrkontrollen åker bilen framåt, om samma knapp trycks in igen stannar bilen.
+
+
+#include <IRremote.h>
+int RECV_PIN = A0; // definerar att ir-motagaren sitter på pin A0.
+int a=0; //En variabel med namnet a (dessa låter ardunion veta om motorerna snurrar eller ej och om bilen skall köra eller stanna då jag trycker på knappen.
+int b=0; //En variabel med namnet b 
+int c=0; //En variabel med namnet c
+
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+#define ML_Ctrl 4     // Vänstra motors riktning.
+#define ML_PWM 5   //Vänstra motorns hastighet.
+#define MR_Ctrl 2    //Högra motorns riktning.
+#define MR_PWM 9   //Högra motorns hastighet.
+
+/*int trigPin = 12;    // Trigger
+int echoPin = 13;    // Echo
+long duration, cm, inches;    //användes till ulltraljuds- avståndsmätaren, fungerade bra men behövs inte för syftet som battlebot.
+*/
+
+
+void setup()
+{Serial.begin(9600);
+  irrecv.enableIRIn(); //  Initsiera IR-mottagaren.
+
+    pinMode(ML_Ctrl, OUTPUT); 
+  pinMode(ML_PWM, OUTPUT);
+  pinMode(MR_Ctrl, OUTPUT);
+  pinMode(MR_PWM, OUTPUT);//Definera pinnaran för motorns kontroller som output-pinnar.
+
+  Serial.begin (9600);  //Startar seriell porten, bra för felsökning.
+  
+  /*pinMode(trigPin, OUTPUT); 
+  pinMode(echoPin, INPUT);
+  pinMode(3, OUTPUT); // pinmode för ultraljud.
+*/
+   
+}
+void loop() {
+    Huvudloop();
+}
+
+void fram_snabb(){ // kör motorerna snabbt rakt framåt.
+ digitalWrite(ML_Ctrl,HIGH);// riktningen = High / framåt.
+  analogWrite(ML_PWM,200);// hatigheten av motorn.
+  digitalWrite(MR_Ctrl,HIGH);// riktningen = High / framåt.
+  analogWrite(MR_PWM,200);// hatigheten av motorn.
+  delay(500);//Delay för att maövereringen skulle gå smidigare.
+}
+
+void stopp(){
+   digitalWrite(ML_Ctrl,HIGH);// riktningen = High / framåt.
+  analogWrite(ML_PWM,0);// hatigheten av motorn.
+  digitalWrite(MR_Ctrl,HIGH);// riktningen = High / framåt.
+  analogWrite(MR_PWM,0);// hatigheten av motorn.
+  delay(500);//Delay för att maövereringen skulle gå smidigare.
+}
+
+void bakat_langsam(){
+  digitalWrite(ML_Ctrl,LOW);// riktningen = LOW / bakåt.
+  analogWrite(ML_PWM,100);//set the PWM control speed of B motor to 200
+  digitalWrite(MR_Ctrl,LOW);// riktningen = LOW / bakåt.
+  analogWrite(MR_PWM,100);//set the PWM control speed of A motor to 200
+  delay(500);//Delay för att maövereringen skulle gå smidigare.
+}
+
+void svang_hoger(){
+  digitalWrite(ML_Ctrl,HIGH);// riktningen = High / framåt.
+  analogWrite(ML_PWM,200);//set the PWM control speed of B motor to 200
+  digitalWrite(MR_Ctrl,LOW);// riktningen = = LOW / bakåt.. to HIGH
+  analogWrite(MR_PWM,150);//set the PWM control speed of A motor to 200
+  delay(250);//Delay för att maövereringen skulle gå smidigare.
+}
+
+void svang_vanster(){
+  digitalWrite(ML_Ctrl,LOW);// riktningen = = LOW / bakåt..
+  analogWrite(ML_PWM,150);//set the PWM control speed of B motor to 200
+  digitalWrite(MR_Ctrl,HIGH);// riktningen = High / framåt. to HIGH
+  analogWrite(MR_PWM,200);//set the PWM control speed of A motor to 200
+  delay(250);//Delay för att maövereringen skulle gå smidigare.
+}
+void fram_sakta(){
+  digitalWrite(ML_Ctrl,HIGH);// riktningen = High / framåt.
+  analogWrite(ML_PWM,100);//set the PWM control speed of B motor to 200
+  digitalWrite(MR_Ctrl,HIGH);// riktningen = High / framåt.
+  analogWrite(MR_PWM,100);//set the PWM control speed of A motor to 200
+  delay(500); //Delay för att maövereringen skulle gå smidigare.
+}
+
+void Huvudloop(){
+  if (irrecv.decode(&results))// if sats av en funktion som tar in signalen från ir-mottageran och "decodar" dem till en sifferkombination. 
+  {
+if(results.value==0x1975 &a==0 || results.value==0x1175 &a==0) //Om framåtpilen trycks ner OCH motorn står stil (a=0)
+{
+  fram_snabb(); // kör funktionen fram_snabb, funktionen har ingen "input" utan anropas för att genomföras.
+  a=1; //motorerna snurrar
+}
+else if(results.value==0x1975 &a==1 || results.value==0x1175 &a==1) //Om man trycker igen OCH motorn snurrar (a=1)
+{
+  stopp(); // kör funktionen stopp.
+  a=0; //motorerna snurrar inte
+}
+
+if(results.value==0x1976 &b==0 || results.value==0x1176 &b==0) //Om bakåtpilen trycks ned 
+{
+  bakat_langsam();
+  b=1;
+}
+else if(results.value==0x1976 &b==1 || results.value==0x1176 &b==1) //Om man trycker bakåt igen 
+{
+  stopp();
+  b=0;
+}
+
+
+if(results.value==0x1974 &a==0 || results.value==0x1174 &a==0) //Om pilen till höger trycks ner 
+{
+  svang_hoger();
+  stopp();  
+  // a=1;
+}
+
+if(results.value==0x1972 &a==0 || results.value==0x1172 &a==0) //Om pilen till vänster trycks ner 
+{
+  svang_vanster();
+  stopp();  
+}
+
+
+
+if(results.value==0x1177 &c==0 || results.value==0x1977 &c==0) //Om ok-knappen trycks ner 
+{
+  fram_sakta();
+  c=1;
+}
+
+
+else if(results.value==0x1177 &c==1 || results.value==0x1977 &c==1) //Om man trycker igen 
+{
+  stopp();
+  c=0;
+}
+
+    irrecv.resume(); //Tar emot nästa värde 
+  }
+
+
+}
