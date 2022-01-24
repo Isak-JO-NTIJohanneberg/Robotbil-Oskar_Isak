@@ -1,0 +1,7 @@
+Här finns koden som txt och ino filer.
+
+
+Kod finns för både styrning av bilen och en separat för servot. Koden för bilens styrning är bättre skriven och mer avancerad, 
+därför är det den vi vill att du skall bedömma. filnamnet är: "Oskar___Isak_-_2A_-_Robotbil".
+
+servo-koden finns också med då det är en viktig del av projektets funktionalitet, den ligger i en undermapp vid namn "Extra arduino för servo-styrning."
